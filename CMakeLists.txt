@@ -14,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   nav_msgs
   tf2_eigen
+  sensor_msgs
+  image_transport
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -158,6 +161,9 @@ target_link_libraries(offboard_node ${catkin_LIBRARIES})
 
 add_executable(t265_to_mavros src/t265_to_mavros.cpp)
 target_link_libraries(t265_to_mavros ${catkin_LIBRARIES})
+
+add_executable(image_test src/image_test.cpp)
+target_link_libraries(image_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )
 
 #############
 ## Install ##
