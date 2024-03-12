@@ -5,7 +5,52 @@
 
 #include<SemiGlobalMatching.h>
 
+
+cv::Mat img_left = cv::Mat(480, 640, CV_8UC1);
+
+cv::Mat img_right = cv::Mat(480, 640, CV_8UC1);
+
 void disp2Depth(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K);
+
+void left_gray_imageCallback(const sensor_msgs::ImageConstPtr& msg)
+{
+    try
+    {
+        cv_bridge::CvImagePtr cv_ptr;
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        //cv::Mat left_gray_image = cv_ptr->image;
+        img_left = cv_ptr->image;
+
+        // 在这里可以对灰度图像进行处理
+        // 比如显示图像信息
+        ROS_INFO("Received a %d x %d grayscale image", img_left.cols, img_left.rows);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+}
+
+void right_gray_imageCallback(const sensor_msgs::ImageConstPtr& msg)
+{
+    try
+    {
+        cv_bridge::CvImagePtr cv_ptr;
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        //cv::Mat right_gray_image = cv_ptr->image;
+        img_right = cv_ptr->image;
+
+        // 在这里可以对灰度图像进行处理
+        // 比如显示图像信息
+        ROS_INFO("Received a %d x %d grayscale image", img_right.cols, img_right.rows);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -14,6 +59,9 @@ int main(int argc, char **argv)
 
     // 创建一个发布图像消息的发布者
     ros::Publisher image_pub = n.advertise<sensor_msgs::Image>("image_topic", 10);
+    // 订阅灰度图像话题
+    ros::Subscriber left_gray_sub = n.subscribe("/gray_image_topic", 1, left_gray_imageCallback);
+    ros::Subscriber right_gray_sub = n.subscribe("/gray_image_topic", 1, right_gray_imageCallback);
 
     // 创建一个CvBridge对象
     cv_bridge::CvImage cv_image;
@@ -21,10 +69,10 @@ int main(int argc, char **argv)
     
 
     // 读取图片
-    cv::Mat img = cv::imread("/home/maxi/SGBM_ws/src/t265_to_mavros/img/test.jpg");
+    //cv::Mat img = cv::imread("/home/maxi/SGBM_ws/src/t265_to_mavros/img/test.jpg");
 
-   cv::Mat img_left = cv::imread("/home/maxi/SGBM_ws/src/t265_to_mavros/img/d435i/infra1_image.png",cv::IMREAD_GRAYSCALE);
-   cv::Mat img_right = cv::imread("/home/maxi/SGBM_ws/src/t265_to_mavros/img/d435i/infra2_image.png",cv::IMREAD_GRAYSCALE);
+   //cv::Mat img_left = cv::imread("/home/maxi/SGBM_ws/src/t265_to_mavros/img/d435i/infra1_image.png",cv::IMREAD_GRAYSCALE);
+   //cv::Mat img_right = cv::imread("/home/maxi/SGBM_ws/src/t265_to_mavros/img/d435i/infra2_image.png",cv::IMREAD_GRAYSCALE);
 
    if (img_left.data == nullptr || img_right.data == nullptr) {
         std::cout << "fail to read images" << std::endl;
@@ -129,44 +177,6 @@ int main(int argc, char **argv)
    //cv::Mat depth_mat;
    disp2Depth(disp_mat, depth_mat, K1);
 
-   uint16_t max_in_depth_mat = 0;
-        for (int i = 0; i < height; i++)
-        {
-            for (int j = 0; j < width; j++)
-            {
-               int id = i*width + j;
-               //cout << "depth_mat.data " << (uint16_t)depth_mat.data[id] << endl;
-               //cout << "depthMap.at<uint16_t>(i, j) " << (uint16_t)depth_mat.at<uint16_t>(i, j) << endl;
-               //不能通过mat.data[id]的方式访问16位深度的深度图！！！！！它只能读取8位的值
-               //printf("depth_mat.data=%d\n", depth_mat.data[id]);
-               if( depth_mat.at<uint16_t>(i, j) > max_in_depth_mat )
-               {
-                  max_in_depth_mat = (uint16_t)depth_mat.at<uint16_t>(i, j) ;
-                  //cout << "depth_mat.data " << (uint16_t)depth_mat.at<uint16_t>(i, j)  << endl;
-               }
-
-            }
-        }
-    //cout << "max_in_depth_mat " << max_in_depth_mat << endl;
-
-   cv::Mat depth_mat_8U_for_show = cv::Mat(height, width, CV_8UC1);  //创建一个8位的灰度图用来显示16位的深度图
-        for (int i = 0; i < height; i++)
-        {
-            for (int j = 0; j < width; j++)
-            {
-                int id = i*width + j;
-                //depthData[id] = ushort( (float)fx *baseline / ((float)dispData[id]) );
-                ///depthData[id] =  fx *baseline / ((int)dispMap.data[id]) ;
-                //depth_mat_8U_for_show.data[id] = ((int)depth_mat.data[id]/65535)*255;
-                //depth_mat_8U_for_show.data[id] = ((int)depth_mat.data[id]/max_in_depth_mat)*255;
-                depth_mat_8U_for_show.at<uint8_t>(i, j) = ( (float)depth_mat.at<uint16_t>(i, j)/max_in_depth_mat)*255;
-                //cout << "depth_mat_8U_for_show.at<uint16_t>(i, j) " << (uint16_t)depth_mat_8U_for_show.at<uint16_t>(i, j) << endl;
-            }
-        }
-
-    cv::imwrite("/home/maxi/SGBM_ws/src/t265_to_mavros/img/d435i/infra1_image_depth_maxi.png", depth_mat_8U_for_show);
-
-
     // 转换图片格式为ROS消息
     //cv_image.image = img;
     //cv_image.image = disp_mat;
@@ -180,6 +190,9 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(1);  // 设置发布频率为1Hz
     while (ros::ok())
     {
+
+
+
         image_pub.publish(img_msg);
         ros::spinOnce();
         loop_rate.sleep();
