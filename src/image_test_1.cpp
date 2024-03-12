@@ -5,6 +5,9 @@
 
 #include<SemiGlobalMatching.h>
 
+#include <iostream>
+#include <chrono>
+
 
 cv::Mat img_left = cv::Mat(480, 640, CV_8UC1);
 
@@ -70,6 +73,9 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(10);  // 设置发布频率为1Hz
     while (ros::ok())
     {
+
+   // 获取当前时间
+    auto start = std::chrono::high_resolution_clock::now();
 
     // 创建一个CvBridge对象
     cv_bridge::CvImage cv_image;
@@ -184,6 +190,16 @@ int main(int argc, char **argv)
    cv::Mat depth_mat = cv::Mat(height, width, CV_16UC1);  //深度图看了下都是16UC1，包括D435i的深度图
    //cv::Mat depth_mat;
    disp2Depth(disp_mat, depth_mat, K1);
+
+   // 获取结束时间
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // 计算耗时时间，单位为毫秒
+    std::chrono::duration<double, std::milli> duration = end - start;
+
+    // 输出耗时时间
+    std::cout << "代码执行耗时: " << duration.count() << " 毫秒" << std::endl;
+
 
     // 转换图片格式为ROS消息
     //cv_image.image = img;
