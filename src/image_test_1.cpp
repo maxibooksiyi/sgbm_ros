@@ -60,8 +60,16 @@ int main(int argc, char **argv)
     // 创建一个发布图像消息的发布者
     ros::Publisher image_pub = n.advertise<sensor_msgs::Image>("image_topic", 10);
     // 订阅灰度图像话题
-    ros::Subscriber left_gray_sub = n.subscribe("/gray_image_topic", 1, left_gray_imageCallback);
-    ros::Subscriber right_gray_sub = n.subscribe("/gray_image_topic", 1, right_gray_imageCallback);
+    ros::Subscriber left_gray_sub = n.subscribe("/camera/infra1/image_rect_raw", 10, left_gray_imageCallback);
+    ros::Subscriber right_gray_sub = n.subscribe("/camera/infra2/image_rect_raw", 10, right_gray_imageCallback);
+
+
+
+    // 发布图像消息
+    //ros::Rate loop_rate(1);  // 设置发布频率为1Hz
+    ros::Rate loop_rate(10);  // 设置发布频率为1Hz
+    while (ros::ok())
+    {
 
     // 创建一个CvBridge对象
     cv_bridge::CvImage cv_image;
@@ -185,13 +193,6 @@ int main(int argc, char **argv)
     //cv_image.encoding = "mono16";
     cv_image.encoding = "16UC1";
     sensor_msgs::ImagePtr img_msg = cv_image.toImageMsg();
-
-    // 发布图像消息
-    ros::Rate loop_rate(1);  // 设置发布频率为1Hz
-    while (ros::ok())
-    {
-
-
 
         image_pub.publish(img_msg);
         ros::spinOnce();
