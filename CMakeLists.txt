@@ -156,6 +156,13 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+add_library(semigloballib
+    src/sgbm/SemiGlobalMatching.cpp
+    src/sgbm/sgm_util.cpp
+    )
+target_link_libraries(semigloballib ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+
 add_executable(offboard_node src/offboard_node.cpp)
 target_link_libraries(offboard_node ${catkin_LIBRARIES})
 
@@ -166,12 +173,7 @@ add_executable(image_test src/image_test.cpp)
 target_link_libraries(image_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )
 
 add_executable(image_test_1 src/image_test_1.cpp)
-target_link_libraries(image_test_1 ${catkin_LIBRARIES} ${OpenCV_LIBS} )
-
-add_library(${SemiGlobal_LIBS} SHARED
-    src/sgbm/SemiGlobalMatching.cpp
-    src/sgbm/sgm_util.cpp
-    )
+target_link_libraries(image_test_1 ${catkin_LIBRARIES} ${OpenCV_LIBS} semigloballib)
 
 #############
 ## Install ##
