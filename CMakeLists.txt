@@ -122,7 +122,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -164,6 +164,14 @@ target_link_libraries(t265_to_mavros ${catkin_LIBRARIES})
 
 add_executable(image_test src/image_test.cpp)
 target_link_libraries(image_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )
+
+add_executable(image_test_1 src/image_test_1.cpp)
+target_link_libraries(image_test_1 ${catkin_LIBRARIES} ${OpenCV_LIBS} )
+
+add_library(${SemiGlobal_LIBS} SHARED
+    src/sgbm/SemiGlobalMatching.cpp
+    src/sgbm/sgm_util.cpp
+    )
 
 #############
 ## Install ##
