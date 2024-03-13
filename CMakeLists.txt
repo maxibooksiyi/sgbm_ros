@@ -172,8 +172,8 @@ target_link_libraries(t265_to_mavros ${catkin_LIBRARIES})
 add_executable(image_test src/image_test.cpp)
 target_link_libraries(image_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )
 
-add_executable(image_test_1 src/image_test_1.cpp)
-target_link_libraries(image_test_1 ${catkin_LIBRARIES} ${OpenCV_LIBS} semigloballib)
+add_executable(sgbm_node src/sgbm_node.cpp)
+target_link_libraries(sgbm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} semigloballib)
 
 #############
 ## Install ##
