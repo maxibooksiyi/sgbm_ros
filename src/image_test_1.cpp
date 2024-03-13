@@ -67,6 +67,40 @@ int main(int argc, char **argv)
     ros::Subscriber right_gray_sub = n.subscribe("/camera/infra2/image_rect_raw", 10, right_gray_imageCallback);
 
 
+    // SGM匹配参数设计
+    SemiGlobalMatching::SGMOption sgm_option;
+    // 聚合路径数
+    sgm_option.num_paths = 8;
+    // 候选视差范围
+    sgm_option.min_disparity = 0;
+    sgm_option.max_disparity = 128;
+
+    // census窗口类型
+    sgm_option.census_size = SemiGlobalMatching::Census5x5;
+    // 一致性检查
+    sgm_option.is_check_lr = true;
+    sgm_option.lrcheck_thres = 1.0f;
+    // 唯一性约束
+    sgm_option.is_check_unique = true;
+    sgm_option.uniqueness_ratio = 0.99;
+    // 剔除小连通区
+    sgm_option.is_remove_speckles = true;
+    sgm_option.min_speckle_aera = 50;
+    // 惩罚项P1、P2
+    sgm_option.p1 = 10;
+    sgm_option.p2_init = 150;
+    // 视差图填充
+    sgm_option.is_fill_holes = false;
+
+    // 定义SGM匹配类实例
+    SemiGlobalMatching sgm;
+
+    // 初始化
+    //if (!sgm.Initialize(width, height, sgm_option)) {
+    if (!sgm.Initialize(640, 480, sgm_option)) {
+        std::cout << "SGM初始化失败！" << std::endl;
+        return -2;
+    }
 
     // 发布图像消息
     //ros::Rate loop_rate(1);  // 设置发布频率为1Hz
@@ -111,39 +145,7 @@ int main(int argc, char **argv)
    }
 
 
-    // SGM匹配参数设计
-    SemiGlobalMatching::SGMOption sgm_option;
-    // 聚合路径数
-    sgm_option.num_paths = 8;
-    // 候选视差范围
-    sgm_option.min_disparity = 0;
-    sgm_option.max_disparity = 128;
 
-    // census窗口类型
-    sgm_option.census_size = SemiGlobalMatching::Census5x5;
-    // 一致性检查
-    sgm_option.is_check_lr = true;
-    sgm_option.lrcheck_thres = 1.0f;
-    // 唯一性约束
-    sgm_option.is_check_unique = true;
-    sgm_option.uniqueness_ratio = 0.99;
-    // 剔除小连通区
-    sgm_option.is_remove_speckles = true;
-    sgm_option.min_speckle_aera = 50;
-    // 惩罚项P1、P2
-    sgm_option.p1 = 10;
-    sgm_option.p2_init = 150;
-    // 视差图填充
-    sgm_option.is_fill_holes = false;
-
-    // 定义SGM匹配类实例
-    SemiGlobalMatching sgm;
-
-    // 初始化
-    if (!sgm.Initialize(width, height, sgm_option)) {
-        std::cout << "SGM初始化失败！" << std::endl;
-        return -2;
-    }
     
     // 匹配
     auto disparity = new float32[uint32(width * height)]();
