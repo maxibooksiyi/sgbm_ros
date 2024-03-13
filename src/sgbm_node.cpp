@@ -63,8 +63,8 @@ int main(int argc, char **argv)
     // 创建一个发布图像消息的发布者
     ros::Publisher image_pub = n.advertise<sensor_msgs::Image>("image_topic", 10);
     // 订阅灰度图像话题
-    ros::Subscriber left_gray_sub = n.subscribe("/camera/infra1/image_rect_raw", 10, left_gray_imageCallback);
-    ros::Subscriber right_gray_sub = n.subscribe("/camera/infra2/image_rect_raw", 10, right_gray_imageCallback);
+    ros::Subscriber left_gray_sub = n.subscribe("/camera/infra1/image_rect_raw", 1, left_gray_imageCallback);
+    ros::Subscriber right_gray_sub = n.subscribe("/camera/infra2/image_rect_raw", 1, right_gray_imageCallback);
 
 
     // SGM匹配参数设计
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     {
 
    // 获取当前时间
-    auto start = std::chrono::high_resolution_clock::now();
+   // auto start = std::chrono::high_resolution_clock::now();
 
     // 创建一个CvBridge对象
     cv_bridge::CvImage cv_image;
@@ -146,13 +146,23 @@ int main(int argc, char **argv)
 
 
 
-    
+       // 获取当前时间
+    auto start = std::chrono::high_resolution_clock::now();
     // 匹配
     auto disparity = new float32[uint32(width * height)]();
     if (!sgm.Match(bytes_left, bytes_right, disparity)) {
         std::cout << "SGM匹配失败！" << std::endl;
         return -2;
     }
+
+   // 获取结束时间
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // 计算耗时时间，单位为毫秒
+    std::chrono::duration<double, std::milli> duration = end - start;
+
+    // 输出耗时时间
+    std::cout << "代码执行耗时: " << duration.count() << " 毫秒" << std::endl;
 
     // 显示视差图
     cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
@@ -193,6 +203,7 @@ int main(int argc, char **argv)
    //cv::Mat depth_mat;
    disp2Depth(disp_mat, depth_mat, K1);
 
+   /***
    // 获取结束时间
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -201,7 +212,7 @@ int main(int argc, char **argv)
 
     // 输出耗时时间
     std::cout << "代码执行耗时: " << duration.count() << " 毫秒" << std::endl;
-
+    ***/
 
     // 转换图片格式为ROS消息
     //cv_image.image = img;
@@ -278,7 +289,7 @@ void disp2Depth(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K)
                 //cout << "dispMap.data[id]为" << (int)dispMap.data[id] << endl;
                 //cout << "算出的像素值也就是深度值(单位mm)为" << depthData[id] << endl;
                 //cout << "算出的像素值也就是深度值(单位mm)为" << (uint16_t)depthMap.data[id] << endl;
-                std::cout << "算出的像素值也就是深度值(单位mm)为" << (uint16_t)depthMap.at<uint16_t>(i, j) << std::endl;
+                //std::cout << "算出的像素值也就是深度值(单位mm)为" << (uint16_t)depthMap.at<uint16_t>(i, j) << std::endl;
             }
         }
     }
