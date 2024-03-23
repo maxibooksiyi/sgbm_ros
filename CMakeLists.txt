@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
+find_package(OpenCV REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -174,6 +175,9 @@ target_link_libraries(image_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )
 
 add_executable(sgbm_node src/sgbm_node.cpp)
 target_link_libraries(sgbm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} semigloballib)
+
+add_executable(opencv_sgbm_node src/opencv_sgbm_node.cpp)
+target_link_libraries(opencv_sgbm_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
