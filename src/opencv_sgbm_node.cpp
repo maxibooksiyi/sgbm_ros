@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     // 创建一个发布图像消息的发布者
-    ros::Publisher image_pub = n.advertise<sensor_msgs::Image>("image_topic", 10);
+    ros::Publisher image_pub = n.advertise<sensor_msgs::Image>("sgbm_depth_image", 10);
     // 订阅灰度图像话题
     ros::Subscriber left_gray_sub = n.subscribe("/camera/infra1/image_rect_raw", 1, left_gray_imageCallback);
     ros::Subscriber right_gray_sub = n.subscribe("/camera/infra2/image_rect_raw", 1, right_gray_imageCallback);
