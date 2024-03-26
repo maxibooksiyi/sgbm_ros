@@ -65,7 +65,44 @@ int main(int argc, char **argv)
     ros::Subscriber left_gray_sub = n.subscribe("/camera/infra1/image_rect_raw", 1, left_gray_imageCallback);
     ros::Subscriber right_gray_sub = n.subscribe("/camera/infra2/image_rect_raw", 1, right_gray_imageCallback);
 
+    // 创建一个CvBridge对象
+    cv_bridge::CvImage cv_image;
 
+
+// 将视差图转换为深度图
+    double baseline = 5.01066446304321;  // 基线长度（单位：cm）
+    double focal_length = 389.365356445312;  // 焦距（单位：像素）
+
+   double fx_1 = 442.05185684172238325;
+   double fy_1 = 442.05185684172238325;
+   double u_1 = 158.16831588745117188;
+   double v_1 = 216.55125045776367188;
+
+   cv::Mat K1 = (cv::Mat_<double>(3,3)<< fx_1, 0, u_1, 0, fy_1, v_1, 0, 0, 1);
+    // cv::Mat depth_map = baseline * focal_length / disparity_map;
+
+
+	  auto start = std::chrono::high_resolution_clock::now();
+
+    // 定义SGBM参数
+    int minDisparity = 0;  // 最小视差
+    int numDisparities = 16 *6 ;  // 视差范围的数量
+    int blockSize = 16;  // 匹配块的大小
+    int P1 = 8 * img_left.channels() * blockSize * blockSize;  // P1参数
+    int P2 = 32 * img_right.channels() * blockSize * blockSize;  // P2参数
+    int disp12MaxDiff = 2;  // 左右视图一致性检查的最大差异
+
+    // 创建SGBM对象并设置参数
+    cv::Ptr<cv::StereoSGBM> sgbm = cv::StereoSGBM::create(minDisparity, numDisparities, blockSize);
+    sgbm->setP1(P1);
+    sgbm->setP2(P2);
+    sgbm->setDisp12MaxDiff(disp12MaxDiff);
+
+    ros::Rate loop_rate(10);  // 设置发布频率为1Hz
+    while (ros::ok())
+    {
+
+    /******************************************************************************
     // 计算视差图
     //cv::Mat disp_mat =  cv::Mat(480, 640, CV_8UC1);;
     cv::Mat disp_mat, disp8_mat;
@@ -145,6 +182,20 @@ int main(int argc, char **argv)
     std::cout << "代码执行耗时: " << duration.count() << " 毫秒" << std::endl;
     ***/
 
+    //*********************************************************************************/
+
+
+    // 计算视差图像
+    cv::Mat disparity;
+    sgbm->compute(img_left, img_right, disparity);
+
+    // 将视差图像归一化到0-255范围内
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8U);
+    //cv::Mat depth_mat = cv::Mat(480, 640, CV_16UC1);  //深度图看了下都是16UC1，包括D435i的深度图
+    cv::Mat depth_mat = cv::Mat(480, 640, CV_16UC1, cv::Scalar(0));  //深度图看了下都是16UC1，包括D435i的深度图
+    disp2Depth(disparity, depth_mat, K1);
+    //depth_mat = baseline * focal_length /(disparity);
+
     // 转换图片格式为ROS消息
     //cv_image.image = img;
     //cv_image.image = disp_mat;
@@ -188,7 +239,8 @@ void disp2Depth(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K)
     float cy = K.at<float>(1, 2);
     //float baseline = 6500; //基线距离65mm
     //float baseline = 80.0/camera_scale;
-    float baseline = 50; //D435i的双目基线是5厘米
+    //float baseline = 50; //D435i的双目基线是5厘米
+    float baseline = 50;
     //cout << "maxitest0" << endl;
     if (type == CV_8U)
     {
