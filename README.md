@@ -6,3 +6,9 @@
 ```
 rosrun offboard_pkg sgbm_node
 ```
+
+sgbm_node.cpp是基于李迎松的SGBM代码(https://gitee.com/maxibooksiyi/awesome-sgbm )改的，自己加上了视差图转深度图，出来的深度图效果还可以，就是计算耗时太长，得8-9秒才算出一张深度图，才能发出一个深度图话题。  
+
+所以我又基于opencv的sgbm函数弄了一个opencv_sgbm_node.cpp。  
+
+
