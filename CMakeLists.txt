@@ -164,12 +164,6 @@ add_library(semigloballib
 target_link_libraries(semigloballib ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 
-add_executable(offboard_node src/offboard_node.cpp)
-target_link_libraries(offboard_node ${catkin_LIBRARIES})
-
-add_executable(t265_to_mavros src/t265_to_mavros.cpp)
-target_link_libraries(t265_to_mavros ${catkin_LIBRARIES})
-
 add_executable(image_test src/image_test.cpp)
 target_link_libraries(image_test ${catkin_LIBRARIES} ${OpenCV_LIBS} )
 
