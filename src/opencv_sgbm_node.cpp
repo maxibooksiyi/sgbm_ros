@@ -13,6 +13,7 @@ cv::Mat img_left = cv::Mat(480, 640, CV_8UC1);
 cv::Mat img_right = cv::Mat(480, 640, CV_8UC1);
 
 void disp2Depth(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K);
+void disp2Depth_(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K);
 
 void left_gray_imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
@@ -190,10 +191,12 @@ int main(int argc, char **argv)
     sgbm->compute(img_left, img_right, disparity);
 
     // 将视差图像归一化到0-255范围内
-    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8U);
+    //cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8U);
+
     //cv::Mat depth_mat = cv::Mat(480, 640, CV_16UC1);  //深度图看了下都是16UC1，包括D435i的深度图
     cv::Mat depth_mat = cv::Mat(480, 640, CV_16UC1, cv::Scalar(0));  //深度图看了下都是16UC1，包括D435i的深度图
-    disp2Depth(disparity, depth_mat, K1);
+    //disp2Depth(disparity, depth_mat, K1);
+    disp2Depth_(disparity, depth_mat, K1);
     //depth_mat = baseline * focal_length /(disparity);
 
     // 转换图片格式为ROS消息
@@ -280,5 +283,61 @@ void disp2Depth(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K)
     {
         std::cout << "please confirm dispImg's type!" << std::endl;
         //cv::waitKey(0);
+    }
+}
+
+
+
+void disp2Depth_(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K)
+{
+    int type = dispMap.type();
+
+    //float fx = K.at<float>(0, 0);  //这么读取的fx的值变为了2.03019e+24
+    double fx = K.at<double>(0, 0);  //现在找到之前自动读取fx值不对的原因了，double类型的变量用float类型去读取导致的
+    //float fx = 422;
+    //float fx = 382; //d435i
+    float fy = K.at<float>(1, 1);
+    float cx = K.at<float>(0, 2);
+    float cy = K.at<float>(1, 2);
+    //float baseline = 6500; //基线距离65mm
+    //float baseline = 80.0/camera_scale;
+    //float baseline = 50; //D435i的双目基线是5厘米
+    float baseline = 50;
+    //cout << "maxitest0" << endl;
+    //if (type == CV_8U)
+    {
+        const float PI = 3.14159265358;
+        int height = dispMap.rows;
+        int width = dispMap.cols;
+
+        //uchar* dispData = (uchar*)dispMap.data;
+        //uint8_t* dispData = (uint8_t*)dispMap.data;
+        ushort* dispData = (ushort*)dispMap.data;
+        ushort* depthData = (ushort*)depthMap.data;  //ushort关键字是System.UInt16的别名 
+        for (int i = 0; i < height; i++)
+        {
+            //cout << "maxitest1" << endl;
+            for (int j = 0; j < width; j++)
+            {
+                //cout << "maxitest2" << endl;
+                int id = i*width + j;
+                //cout << "id is" << id << endl;
+                //cout << "像素height坐标i is" << i << endl;
+                //cout << "像素width坐标j is" << j << endl;
+                //if (!dispData[id])  continue;  //防止0除
+                if (!dispMap.at<uint16_t>(i, j))  continue;  //防止0除
+                //depthData[id] = ushort( (float)fx *baseline / ((float)dispData[id]) );
+                //depthData[id] =  fx *baseline / ((int)dispMap.data[id]) ;
+                //depthMap.data[id] = ushort( fx *baseline / ((int)dispMap.data[id]) );
+                depthMap.at<uint16_t>(i, j) = ushort( fx *baseline / (((uint16_t)dispMap.at<uint16_t>(i, j))/16) );
+                //cout << "fx为" << fx << endl;
+                //cout << "baseline为" << baseline << endl;
+                //cout << "dispData[id]为" << dispData[id] << endl;
+                //cout << "dispMap.data[id]为" << (int)dispMap.data[id] << endl;
+                //cout << "算出的像素值也就是深度值(单位mm)为" << depthData[id] << endl;
+                //cout << "算出的像素值也就是深度值(单位mm)为" << (uint16_t)depthMap.data[id] << endl;
+                //std::cout << "算出的像素值也就是深度值(单位mm)为" << (uint16_t)depthMap.at<uint16_t>(i, j) << std::endl;
+            }
+        }
     }
 }
