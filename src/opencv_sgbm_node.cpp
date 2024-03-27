@@ -286,7 +286,15 @@ void disp2Depth(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K)
     }
 }
 
-
+/*
+函数作用：视差图转深度图
+这里输入的视差图是opencv的SGBM的compute函数输出的16位定点型视差图，注意disp2Depth函数和disp2Depth_函数的区别，前者输入是8位视差图，后者输入是16位视差图
+输入：
+　　dispMap ----视差图，16位单通道
+　　K       ----内参矩阵，float类型
+输出：
+　　depthMap ----深度图，16位无符号单通道，CV_16UC1
+*/
 
 void disp2Depth_(cv::Mat dispMap, cv::Mat &depthMap, cv::Mat K)
 {
